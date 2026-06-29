@@ -1,21 +1,23 @@
 # articles/views.py
-from django.views.generic import ListView, DetailView  # new
-from django.views.generic.edit import UpdateView, DeleteView, CreateView  # new
-from django.urls import reverse_lazy  # new
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+
 from .models import Article
 
 
-class ArticleListView(ListView):
+class ArticleListView(LoginRequiredMixin, ListView):  # new
     model = Article
     template_name = "article_list.html"
 
 
-class ArticleDetailView(DetailView):  # new
+class ArticleDetailView(LoginRequiredMixin, DetailView):  # new
     model = Article
     template_name = "article_detail.html"
 
 
-class ArticleUpdateView(UpdateView):  # new
+class ArticleUpdateView(LoginRequiredMixin, UpdateView):  # new
     model = Article
     fields = (
         "title",
@@ -24,16 +26,19 @@ class ArticleUpdateView(UpdateView):  # new
     template_name = "article_edit.html"
 
 
-class ArticleDeleteView(DeleteView):  # new
+class ArticleDeleteView(LoginRequiredMixin, DeleteView):  # new
     model = Article
     template_name = "article_delete.html"
     success_url = reverse_lazy("article_list")
 
-class ArticleCreateView(CreateView):  # new
+
+class ArticleCreateView(LoginRequiredMixin, CreateView):
     model = Article
     template_name = "article_new.html"
-    fields = (
-        "title",
-        "body",
-        "author",
-    )
+    fields = ("title", "body",)
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
